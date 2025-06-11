@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 class Eve(nn.Module):
     def __init__(self, cfg):
@@ -10,6 +11,6 @@ class Eve(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, plaintext, key):
-        x = torch.cat([plaintext, key], dim=-1)
+    def forward(self, ciphertext):
+        x = torch.cat([ciphertext, key], dim=-1)
         return self.net(x)

@@ -1,5 +1,5 @@
 import torch.nn as nn
-
+import torch
 class Alice(nn.Module):
     def __init__(self, cfg):
         super().__init__()
