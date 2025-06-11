@@ -1,5 +1,5 @@
 import torch.nn.functional as F
-
+import torch
 class CompositeLoss:
     def bob_loss(self, pred, target):
         return F.mse_loss(pred, target)
