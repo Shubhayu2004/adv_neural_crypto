@@ -1,8 +1,8 @@
 name: phase1-short
 seq_len: 16
-hidden: 128
+hidden: 256
 batch_size: 512
-epochs: 20
+epochs: 100
 lr: 0.0008
 num_eves: 1
 dataset_size: 10000
