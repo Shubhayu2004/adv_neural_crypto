@@ -5,7 +5,7 @@ class Bob(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(cfg.seq_len * 2, cfg.hidden),
+            nn.Linear(cfg.seq_len + cfg.key_dim, cfg.hidden),
             nn.ReLU(),
             nn.Linear(cfg.hidden, cfg.hidden),
             nn.ReLU(),
@@ -14,8 +14,8 @@ class Bob(nn.Module):
         )
         self.apply(self.init_weights)
 
-    def forward(self, ct, key):
-        x = torch.cat([ct, key], dim=-1)
+    def forward(self, ct, priv_key):
+        x = torch.cat([ct, priv_key], dim=-1)
         return self.net(x)
 
     @staticmethod

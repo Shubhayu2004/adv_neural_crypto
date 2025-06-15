@@ -5,7 +5,7 @@ class Alice(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(cfg.seq_len * 2, cfg.hidden),
+            nn.Linear(cfg.seq_len + cfg.key_dim, cfg.hidden),
             nn.ReLU(),
             nn.Linear(cfg.hidden, cfg.hidden),
             nn.ReLU(),
@@ -14,8 +14,8 @@ class Alice(nn.Module):
         )
         self.apply(self.init_weights)
 
-    def forward(self, pt, key):
-        x = torch.cat([pt, key], dim=-1)
+    def forward(self, pt, pub_key):
+        x = torch.cat([pt, pub_key], dim=-1)
         return self.net(x)
 
     @staticmethod
