@@ -1,71 +1,54 @@
 
-# 🔐 Adversarial Neural Cryptography
+# 🔐 Adversarial Neural Cryptography (Symmetric & Asymmetric)
 
-This repository implements and extends the ideas from:
+This repository implements neural cryptographic agents inspired by:
 
 > **Learning to Protect Communications with Adversarial Neural Cryptography**  
-> Martín Abadi & David G. Andersen  
-> [arXiv:1610.06918](https://arxiv.org/abs/1610.06918)
-
-The project simulates secure communication between neural agents:
-
-- **Alice** learns to encrypt a message using a shared key.
-- **Bob** learns to decrypt the ciphertext using the same key.
-- **Eve** tries to decrypt the message without access to the key.
-
-The system is trained using **adversarial objectives**, such that:
-- Bob accurately reconstructs the original message.
-- Eve consistently fails to infer any useful information.
+> Martín Abadi & David G. Andersen — [arXiv:1610.06918](https://arxiv.org/abs/1610.06918)
 
 ---
 
-## 📁 Directory Structure
+## 🧠 Key Features
+
+| Feature                | Description                                    |
+|------------------------|------------------------------------------------|
+| ✅ Symmetric crypto     | Shared-key encryption with adversarial Eve    |
+| 🔐 Asymmetric crypto    | Public-key Alice / private-key Bob model      |
+| ♻️ Key reuse            | Public key reused across batches (optional)   |
+| 📊 TensorBoard logging | Track losses and learned key distributions    |
+| 📈 Visualizations       | Plot Bob/Eve loss over time                   |
+| 🧪 Demo script          | Encrypt/decrypt a message with trained model  |
+
+---
+
+## 📁 Project Structure
 
 ```
 
 adv\_neural\_crypto/
-├── data/                  # Synthetic binary data loader
-├── modules/               # Alice, Bob, Eve neural models
-├── trainers/              # LightningModule with manual optimization
-├── utils/                 # Losses, metrics, logging
-├── configs/               # YAML config files
-├── experiments/           # Training script
-├── scripts/               # Evaluation & plotting scripts
-└── logs/                  # Stores loss logs and result plots
+├── data/             # Synthetic binary data
+├── modules/          # Alice, Bob, Eve, KeyGen networks
+├── trainers/         # Lightning training logic
+├── utils/            # Loss functions, logging
+├── configs/          # YAML training configs
+├── scripts/          # Evaluation, plotting, demo
+├── experiments/      # Training runner
+├── logs/             # Output loss plots, metrics
+└── tb\_logs/          # TensorBoard logs
 
 ````
 
 ---
 
-## 🧪 Sample Results
-
-### 📊 Loss Curves
-
-![Loss Plot](logs/loss_curve.png)
-
-> In this plot:
-> - Green = Bob's reconstruction loss (should ↓)
-> - Red = Eve's interception loss (should ↑ or plateau)
-
----
-
-## 🔧 Setup Instructions
-
-### 🐍 Create a virtual environment:
+## 🛠️ Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate      # Linux/macOS
-.\.venv\Scripts\activate       # Windows
+source .venv/bin/activate          # or .\.venv\Scripts\activate
+pip install torch pytorch-lightning pyyaml matplotlib
 ````
 
-### 📦 Install requirements:
-
-```bash
-pip install torch pytorch-lightning pyyaml matplotlib
-```
-
-Optional (for explainability/visuals):
+Optional:
 
 ```bash
 pip install captum
@@ -73,54 +56,54 @@ pip install captum
 
 ---
 
-## 📄 Configuration
-
-Sample config in `configs/short.yml`:
+## 📄 Config Example: `configs/short.yml`
 
 ```yaml
 name: short
 seq_len: 16
+key_dim: 16
 hidden: 256
 batch_size: 512
 epochs: 100
 lr: 0.001
 num_eves: 1
 dataset_size: 10000
+key_reuse: true
+log_key_every: 10
 ```
 
 ---
 
-## 🚀 Training the Model
-
-Run the training experiment:
+## 🚀 Training
 
 ```bash
 python experiments/run_experiments.py configs/short.yml
 ```
 
-This will:
-
-* Train Alice and Bob for 10 warm-up epochs
-* Introduce Eve thereafter
-* Log results in `tb_logs/` and `logs/loss_log.pt`
+* Logs saved in `logs/loss_log.pt`
+* Key distributions appear in TensorBoard
 
 ---
 
-## 📈 Visualize Loss Curve
+## 📊 Visualization
 
-Generate a loss-over-steps plot:
+### Loss Curve:
 
 ```bash
 python scripts/plot_losses.py
 ```
 
-Creates: `logs/loss_curve.png`
+➡ Generates `logs/loss_curve.png`
+
+### TensorBoard:
+
+```bash
+tensorboard --logdir tb_logs/
+```
 
 ---
 
-## 🧪 Evaluate Performance
-
-After training:
+## 🧪 Evaluation
 
 ```bash
 python scripts/evaluate_model.py configs/short.yml
@@ -129,73 +112,53 @@ python scripts/evaluate_model.py configs/short.yml
 Example output:
 
 ```
-📊 Evaluation Results:
-🔐 Avg Bob Decryption Loss : 0.139570
-🕵️  Avg Eve Interception Loss: 3.745024
+🔐 Avg Bob Decryption Loss : 0.139
+🕵️  Avg Eve Interception Loss: 3.74
 ```
 
 ---
 
-## 📊 Metrics Interpretation
+## 🔁 Message Demo
 
-| Metric       | Description          | Ideal Value   |
-| ------------ | -------------------- | ------------- |
-| **Bob Loss** | Reconstruction error | \~0.0         |
-| **Eve Loss** | Interception error   | >> Bob’s Loss |
+Encrypt/decrypt one plaintext example:
 
----
-
-## 🔁 Extensions & Research Directions
-
-| Feature               | Description                                |
-| --------------------- | ------------------------------------------ |
-| 🧠 Transformer Crypto | Use attention layers instead of MLPs       |
-| 🔀 Eve Ensembles      | Adversaries with diverse architectures     |
-| 🔒 Selective Crypto   | Encrypt only sensitive parts of data       |
-| 🌐 Federated Setup    | Secure communication in distributed agents |
-| ℹ️  Info Losses       | Penalize mutual information with Eve       |
-
----
-
-## 🧠 References
-
-* Abadi, M., & Andersen, D. G. (2016). *Learning to Protect Communications with Adversarial Neural Cryptography.*
-* Goodfellow, I. et al. (2014). *Generative Adversarial Nets.*
-* DeepLearning.AI – *Practical training design & adversarial robustness.*
-
----
-
-## 🙏 Credits
-
-* Built using **PyTorch Lightning**
-* Inspired by the original TensorFlow code from Abadi & Andersen
-* Refactored, modularized, and extended for modern deep learning practice
-
----
-
-## 📜 License
-
-MIT License. Free to use, modify, and extend with attribution.
-
----
-
-## ✅ To Do
-
-* [ ] Add support for asymmetric neural crypto
-* [ ] Deploy on encrypted messaging demo
-* [ ] Add unit tests & experiment runners
-
+```bash
+python scripts/demo_asym.py
 ```
 
+Outputs plaintext, ciphertext, and decrypted result.
+
+---
+
+## ✅ Current Status
+
+| Module        | Status        | Notes                                   |
+| ------------- | ------------- | --------------------------------------- |
+| Alice / Bob   | ✅ Implemented | MLPs with key support                   |
+| Eve           | ✅ Implemented | Symmetric & asymmetric mode             |
+| KeyGen        | ✅ Implemented | Learnable public/private key pairs      |
+| Trainer       | ✅ Updated     | Manual optimization, warm-up, key reuse |
+| Losses        | ✅ Modularized | Supports both symmetric & asymmetric    |
+| Logging       | ✅ Active      | Losses + key histograms in TensorBoard  |
+| Visualization | ✅ Working     | Plots saved to `logs/`                  |
+| Evaluation    | ✅ Scripted    | CLI output of Bob/Eve performance       |
+| Demo          | ✅ Minimal     | Scripted 1-shot encryption & decryption |
+
+---
+
+## 🧩 Next Ideas
+
+* Add **transformer-based Alice/Bob**
+* Track **bitwise accuracy** in evaluation
+* Train Eve on **unseen test keys**
+* Apply to **images or text features**
+
+---
+
+## 📝 License
+
+MIT — open for use, extension, and research.
+
 ---
 
 
-
-
-
-
-python experiments/run_experiments.py configs/short.yml
-
-python scripts/plot_losses.py
-
-python scripts/evaluate_model.py configs/short.yml
