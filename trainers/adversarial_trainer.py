@@ -36,7 +36,13 @@ class AdvCryptoModel(pl.LightningModule):
         current_epoch = self.trainer.current_epoch
 
         # Generate public-private key pairs
-        pub_key, priv_key = self.keygen(batch_size)
+        # Generate or reuse keys
+        if self.cfg.key_reuse:
+            if not hasattr(self, "_pub_key") or batch_idx == 0:
+                self._pub_key, self._priv_key = self.keygen(batch_size)
+            pub_key, priv_key = self._pub_key, self._priv_key
+        else:
+            pub_key, priv_key = self.keygen(batch_size)
 
         # Forward pass
         ct = self.alice(pt, pub_key)
@@ -94,3 +100,10 @@ class AdvCryptoModel(pl.LightningModule):
             "bob_losses": self.bob_losses,
             "eve_losses": self.eve_losses
         }, os.path.join(out_dir, "loss_log.pt"))
+
+    def on_train_epoch_end(self):
+        if self.trainer.current_epoch % self.cfg.log_key_every == 0:
+            pub, priv = self.keygen(self.cfg.batch_size)
+            self.logger.experiment.add_histogram("pub_key", pub, self.trainer.current_epoch)
+            self.logger.experiment.add_histogram("priv_key", priv, self.trainer.current_epoch)
+
