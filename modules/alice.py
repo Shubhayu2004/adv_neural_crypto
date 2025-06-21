@@ -14,6 +14,9 @@ class Alice(nn.Module):
         )
         self.apply(self.init_weights)
 
+    
+
+
     def forward(self, pt, pub_key):
         x = torch.cat([pt, pub_key], dim=-1)
         return self.net(x)

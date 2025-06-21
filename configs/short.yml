@@ -7,4 +7,6 @@ lr: 0.0008
 num_eves: 1
 dataset_size: 10000
 key_reuse: true
+key_dim: 16 
+log_key_every: 10
 
