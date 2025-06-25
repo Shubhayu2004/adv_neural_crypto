@@ -1,0 +1,73 @@
+Reproducibility Report: Adversarial Neural Cryptography (Abadi & Andersen, 2016)
+====================================================================
+
+**Objective:**
+Reproduce the results of "Learning to Protect Communications with Adversarial Neural Cryptography" (Abadi & Andersen, 2016) using PyTorch Lightning and modern best practices.
+
+--------------------------------------------------------------------
+
+1. Model Architectures
+----------------------
+- **Alice & Bob:**
+  - Both are 3-layer MLPs with two hidden layers of 256 units each (ReLU activations), and a final Sigmoid output layer.
+  - Input: Alice receives plaintext and key concatenated; Bob receives ciphertext and key concatenated.
+- **Eve:**
+  - 3-layer MLP with two hidden layers of 256 units each (ReLU activations), and a final Sigmoid output layer.
+  - Input: Eve receives only the ciphertext.
+- **Key Generation:**
+  - Keys are random binary vectors generated per message/batch, matching the original paper. No learnable key generator is used.
+
+2. Data
+-------
+- **Plaintext:** Random binary vectors of length 16 (as in the paper).
+- **Key:** Random binary vectors of length 16, generated independently for each message.
+- **Dataset:** 10,000 samples per epoch, batch size 512.
+
+3. Training Regime
+------------------
+- **Warm-up Phase:**
+  - First 10 epochs: Only Alice and Bob are trained to reconstruct the plaintext from ciphertext and key.
+- **Adversarial Phase:**
+  - After warm-up: Alice, Bob, and Eve are trained adversarially.
+  - Alice and Bob minimize reconstruction loss and maximize Eve's loss.
+  - Eve tries to minimize her own reconstruction loss.
+- **Optimizer:** Adam, learning rate 0.0008 (as in the paper).
+- **Epochs:** 100.
+
+4. Loss Functions
+-----------------
+- **Bob's Loss:** Mean squared error (MSE) between Bob's output and the true plaintext.
+- **Eve's Loss:** Mean squared error (MSE) between Eve's output and the true plaintext.
+- **Adversarial Loss:** Alice and Bob are trained to minimize their own loss and maximize Eve's loss, as in the original adversarial setup.
+
+5. Evaluation Metrics
+---------------------
+- **Loss Curves:** Both Bob's and Eve's losses are logged and plotted over time.
+- **Bitwise Accuracy:** Fraction of bits correctly reconstructed by Bob and Eve, logged and plotted over time.
+- **Logging:** All metrics are saved for each training step for reproducibility and analysis.
+
+6. Implementation Details
+-------------------------
+- **Framework:** PyTorch Lightning for modularity and reproducibility.
+- **Random Seeds:** (Recommended) Set for Python, NumPy, and PyTorch for full reproducibility.
+- **No Key Reuse:** Keys are generated fresh for each message, as in the paper.
+- **No Learnable KeyGen:** Strictly random keys, matching the original methodology.
+- **No Architectural Deviations:** All model and training details match the original paper unless otherwise noted.
+
+7. Results & Comparison
+-----------------------
+- **Loss and accuracy curves** can be directly compared to those in the original paper.
+- **Plots:**
+  - `logs/loss_curve.png` — Bob and Eve loss curves
+  - `logs/bitwise_accuracy_curve.png` — Bob and Eve bitwise accuracy curves
+- **Logs:**
+  - `logs/loss_log.pt` — Contains all loss and accuracy metrics for further analysis.
+
+8. Deviations/Notes
+-------------------
+- No significant deviations from the original paper's methodology.
+- All code and configs are available for inspection and further experimentation.
+
+--------------------------------------------------------------------
+
+**This report can be used as the basis for the reproducibility section of a research paper or for sharing with the research community.** 

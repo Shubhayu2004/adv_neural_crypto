@@ -21,11 +21,16 @@ class AdvCryptoModel(pl.LightningModule):
         # For plotting loss
         self.bob_losses = []
         self.eve_losses = []
+        self.bob_accuracies = []
+        self.eve_accuracies = []
 
     def forward(self, pt, key):
         ct = self.alice(pt, key)
         pt_hat = self.bob(ct, key)
         return ct, pt_hat
+
+    def bitwise_accuracy(self, pred, target):
+        return (pred.round() == target).float().mean().item()
 
     def training_step(self, batch, batch_idx):
         pt, key = batch
@@ -35,6 +40,9 @@ class AdvCryptoModel(pl.LightningModule):
         # Generate ciphertext and Bob's reconstruction
         ct = self.alice(pt, key)
         pt_hat = self.bob(ct, key)
+
+        # Bitwise accuracy for Bob
+        bob_acc = self.bitwise_accuracy(pt_hat, pt)
 
         if current_epoch < warmup_epochs:
             # === Warm-up: Train Alice & Bob only ===
@@ -47,6 +55,8 @@ class AdvCryptoModel(pl.LightningModule):
 
             self.bob_losses.append(true_bob_loss.item())
             self.eve_losses.append(float('nan'))
+            self.bob_accuracies.append(bob_acc)
+            self.eve_accuracies.append(float('nan'))
 
         else:
             # === Adversarial Phase ===
@@ -66,7 +76,8 @@ class AdvCryptoModel(pl.LightningModule):
             self.manual_backward(loss_ab)
             opt_ab.step()
 
-            # Train each Eve
+            # Train each Eve and compute bitwise accuracy
+            eve_accs = []
             for i, eve in enumerate(self.eves):
                 pt_pred = eve(ct.detach())
                 loss_e = self.losses.eve_loss(pt_pred, pt)
@@ -74,17 +85,21 @@ class AdvCryptoModel(pl.LightningModule):
                 opt.zero_grad()
                 self.manual_backward(loss_e)
                 opt.step()
+                eve_accs.append(self.bitwise_accuracy(pt_pred, pt))
 
-            # Logging pure losses
+            # Logging pure losses and accuracies
             self.bob_losses.append(true_bob_loss.item())
             avg_eve_loss = sum(F.mse_loss(e(ct), pt).item() for e in self.eves) / len(self.eves)
             self.eve_losses.append(avg_eve_loss)
+            self.bob_accuracies.append(bob_acc)
+            self.eve_accuracies.append(sum(eve_accs) / len(eve_accs))
 
         # Log to TensorBoard
         self.log("loss_ab", true_bob_loss, prog_bar=True)
+        self.log("bob_bitwise_acc", self.bob_accuracies[-1], prog_bar=True)
         if current_epoch >= warmup_epochs:
             self.log("loss_eve", self.eve_losses[-1])
-
+            self.log("eve_bitwise_acc", self.eve_accuracies[-1], prog_bar=True)
 
     def configure_optimizers(self):
         opt_ab = torch.optim.Adam(list(self.alice.parameters()) + list(self.bob.parameters()), lr=self.cfg.lr)
@@ -96,5 +111,7 @@ class AdvCryptoModel(pl.LightningModule):
         os.makedirs(out_dir, exist_ok=True)
         torch.save({
             "bob_losses": self.bob_losses,
-            "eve_losses": self.eve_losses
+            "eve_losses": self.eve_losses,
+            "bob_accuracies": self.bob_accuracies,
+            "eve_accuracies": self.eve_accuracies
         }, os.path.join(out_dir, "loss_log.pt"))
