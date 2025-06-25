@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from modules.alice import Alice
 from modules.bob import Bob
 from modules.eve import Eve
+from modules.transformer_crypto import TransformerAlice, TransformerBob, TransformerEve
 from utils.losses import CompositeLoss
 
 class AdvCryptoModel(pl.LightningModule):
@@ -13,9 +14,15 @@ class AdvCryptoModel(pl.LightningModule):
         self.cfg = cfg
         self.automatic_optimization = False
 
-        self.alice = Alice(cfg)
-        self.bob = Bob(cfg)
-        self.eves = nn.ModuleList([Eve(cfg) for _ in range(cfg.num_eves)])
+        # Select architecture based on config
+        if getattr(cfg, 'use_transformer', False):
+            self.alice = TransformerAlice(cfg)
+            self.bob = TransformerBob(cfg)
+            self.eves = nn.ModuleList([TransformerEve(cfg) for _ in range(cfg.num_eves)])
+        else:
+            self.alice = Alice(cfg)
+            self.bob = Bob(cfg)
+            self.eves = nn.ModuleList([Eve(cfg) for _ in range(cfg.num_eves)])
         self.losses = CompositeLoss()
 
         # For plotting loss
@@ -60,7 +67,10 @@ class AdvCryptoModel(pl.LightningModule):
 
         else:
             # === Adversarial Phase ===
-            opt_ab, *opt_eves = self.optimizers()
+            optims = self.optimizers()
+            if not isinstance(optims, (list, tuple)):
+                optims = [optims]
+            opt_ab, *opt_eves = optims
 
             # True reconstruction loss
             true_bob_loss = self.losses.bob_loss(pt_hat, pt)
