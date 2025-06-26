@@ -51,9 +51,13 @@ class AdvCryptoModel(pl.LightningModule):
         # Bitwise accuracy for Bob
         bob_acc = self.bitwise_accuracy(pt_hat, pt)
 
+        optims = self.optimizers()
+        if not isinstance(optims, (list, tuple)):
+            optims = [optims]
+        opt_ab, *opt_eves = optims
+
         if current_epoch < warmup_epochs:
             # === Warm-up: Train Alice & Bob only ===
-            opt_ab = self.optimizers()[0]
             true_bob_loss = self.losses.bob_loss(pt_hat, pt)
 
             opt_ab.zero_grad()
@@ -67,11 +71,6 @@ class AdvCryptoModel(pl.LightningModule):
 
         else:
             # === Adversarial Phase ===
-            optims = self.optimizers()
-            if not isinstance(optims, (list, tuple)):
-                optims = [optims]
-            opt_ab, *opt_eves = optims
-
             # True reconstruction loss
             true_bob_loss = self.losses.bob_loss(pt_hat, pt)
 

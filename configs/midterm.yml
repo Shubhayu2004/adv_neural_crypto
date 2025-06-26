@@ -1,15 +1,15 @@
 name: midterm-transformer
-seq_len: 16
+seq_len: 32
 hidden: 256
 batch_size: 512
 epochs: 100
-lr: 0.0008
+lr: 0.0003
 num_eves: 1
-dataset_size: 10000
+dataset_size: 50000
 
 # Transformer-specific
 use_transformer: true
-transformer_embed_dim: 32
-transformer_nhead: 4
-transformer_num_layers: 2
-transformer_hidden_dim: 128
+transformer_embed_dim: 16
+transformer_nhead: 2
+transformer_num_layers: 1
+transformer_hidden_dim: 32
